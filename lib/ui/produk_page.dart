@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:tokokita/helpers/session.dart';
+import 'package:tokokita/bloc/logout_bloc.dart';
+import 'package:tokokita/bloc/produk_bloc.dart';
 import 'package:tokokita/model/produk.dart';
 import 'package:tokokita/ui/login_page.dart';
 import 'package:tokokita/ui/produk_detail.dart';
@@ -12,54 +13,7 @@ class ProdukPage extends StatefulWidget {
   _ProdukPageState createState() => _ProdukPageState();
 }
 
-class _ProdukPageState extends State<ProdukPage>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-
-  // List produk yang bisa diupdate
-  List<Produk> listProduk = [
-    Produk(
-      id: '1',
-      kodeProduk: 'A001',
-      namaProduk: 'Kamera',
-      hargaProduk: 5000000,
-    ),
-    Produk(
-      id: '2',
-      kodeProduk: 'A002',
-      namaProduk: 'Kulkas',
-      hargaProduk: 2500000,
-    ),
-    Produk(
-      id: '3',
-      kodeProduk: 'A003',
-      namaProduk: 'Mesin Cuci',
-      hargaProduk: 2000000,
-    ),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
-    );
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
+class _ProdukPageState extends State<ProdukPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,191 +65,26 @@ class _ProdukPageState extends State<ProdukPage>
             ),
             child: IconButton(
               icon: const Icon(Icons.add, color: Colors.white, size: 22),
-              onPressed: () async {
-                final result = await Navigator.push(
+              onPressed: () {
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ProdukForm()),
                 );
-                if (result != null) {
-                  setState(() {});
-                }
               },
             ),
           ),
         ],
       ),
       drawer: _buildDrawer(),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: listProduk.isEmpty
-            ? _buildEmptyState()
-            : Column(
-                children: [
-                  // Stats Card
-                  Container(
-                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.blue[700]!, Colors.blue[500]!],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blue.withOpacity(0.3),
-                          blurRadius: 15,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.inventory_2_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${listProduk.length}',
-                              style: const TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              'Total Produk',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white.withOpacity(0.9),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+      body: FutureBuilder<List>(
+        future: ProdukBloc.getProduks(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) print(snapshot.error);
 
-                  // Products List
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      itemCount: listProduk.length,
-                      itemBuilder: (context, index) {
-                        return TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          duration: Duration(milliseconds: 300 + (index * 100)),
-                          builder: (context, value, child) {
-                            return Opacity(
-                              opacity: value,
-                              child: Transform.translate(
-                                offset: Offset(0, 20 * (1 - value)),
-                                child: ItemProduk(
-                                  produk: listProduk[index],
-                                  onDelete: () => _deleteProduk(index),
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(30),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.inventory_2_outlined,
-              size: 80,
-              color: Colors.grey[400],
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Belum Ada Produk',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tambahkan produk pertama Anda!',
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProdukForm()),
-              );
-              if (result != null) {
-                setState(() {});
-              }
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('Tambah Produk'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue[700],
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _deleteProduk(int index) {
-    setState(() {
-      listProduk.removeAt(index);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
-            Text('Produk berhasil dihapus'),
-          ],
-        ),
-        backgroundColor: Colors.green[600],
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
+          return snapshot.hasData
+              ? ListProduk(list: snapshot.data)
+              : const Center(child: CircularProgressIndicator());
+        },
       ),
     );
   }
@@ -342,9 +131,9 @@ class _ProdukPageState extends State<ProdukPage>
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    Session.email ?? "Guest",
-                    style: const TextStyle(
+                  const Text(
+                    'Toko Kita User',
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -531,14 +320,16 @@ class _ProdukPageState extends State<ProdukPage>
               ),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            onPressed: () {
-              Navigator.pop(context);
-              Session.logout();
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-                (Route<dynamic> route) => false,
-              );
+            onPressed: () async {
+              Navigator.pop(context); // tutup dialog konfirmasi
+
+              // Panggil LogoutBloc
+              await LogoutBloc.logout().then((value) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                  (route) => false,
+                );
+              });
             },
             child: const Text(
               'Logout',
@@ -551,12 +342,29 @@ class _ProdukPageState extends State<ProdukPage>
   }
 }
 
+// Class ListProduk
+class ListProduk extends StatelessWidget {
+  final List? list;
+
+  const ListProduk({Key? key, this.list}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: list == null ? 0 : list!.length,
+      itemBuilder: (context, i) {
+        return ItemProduk(produk: list![i]);
+      },
+    );
+  }
+}
+
+// Class ItemProduk
 class ItemProduk extends StatelessWidget {
   final Produk produk;
-  final VoidCallback? onDelete;
 
-  const ItemProduk({Key? key, required this.produk, this.onDelete})
-    : super(key: key);
+  const ItemProduk({Key? key, required this.produk}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -582,16 +390,13 @@ class ItemProduk extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () async {
-            final result = await Navigator.push(
+          onTap: () {
+            Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ProdukDetail(produk: produk),
               ),
             );
-            if (result == 'deleted' && onDelete != null) {
-              onDelete!();
-            }
           },
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -624,7 +429,7 @@ class ItemProduk extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        produk.namaProduk!,
+                        produk.namaProduk ?? '',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -642,7 +447,7 @@ class ItemProduk extends StatelessWidget {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          produk.kodeProduk!,
+                          produk.kodeProduk ?? '',
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.blue[900],
@@ -652,7 +457,7 @@ class ItemProduk extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Rp ${produk.hargaProduk!.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                        'Rp ${produk.hargaProduk?.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,

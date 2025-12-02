@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:tokokita/helpers/session.dart';
+import 'package:tokokita/bloc/registrasi_bloc.dart';
+import 'package:tokokita/widget/success_dialog.dart';
+import 'package:tokokita/widget/warning_dialog.dart';
 
 class RegistrasiPage extends StatefulWidget {
   const RegistrasiPage({Key? key}) : super(key: key);
@@ -210,9 +212,9 @@ class _RegistrasiPageState extends State<RegistrasiPage>
                                     width: 1,
                                   ),
                                 ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
+                                child: Wrap(
+                                  alignment: WrapAlignment.center,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
                                   children: [
                                     const Text(
                                       'Sudah punya akun? ',
@@ -386,12 +388,6 @@ class _RegistrasiPageState extends State<RegistrasiPage>
           }
           if (!value.contains('@')) {
             return 'Email tidak valid';
-          }
-          bool emailExists = Session.registeredUsers.any(
-            (user) => user['email'] == value,
-          );
-          if (emailExists) {
-            return 'Email sudah terdaftar';
           }
           return null;
         },
@@ -578,8 +574,8 @@ class _RegistrasiPageState extends State<RegistrasiPage>
       child: ElevatedButton(
         onPressed: () {
           var validate = _formKey.currentState!.validate();
-          if (validate && !_isLoading) {
-            _submit();
+          if (validate) {
+            if (!_isLoading) _submit();
           }
         },
         style: ElevatedButton.styleFrom(
@@ -598,85 +594,75 @@ class _RegistrasiPageState extends State<RegistrasiPage>
                   strokeWidth: 2.5,
                 ),
               )
-            : const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.person_add_rounded, color: Colors.white, size: 22),
-                  SizedBox(width: 10),
-                  Text(
-                    'Daftar',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+            : const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.person_add_rounded,
                       color: Colors.white,
-                      letterSpacing: 0.5,
+                      size: 22,
                     ),
-                  ),
-                ],
+                    SizedBox(width: 10),
+                    Text(
+                      'Daftar',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
               ),
       ),
     );
   }
 
   void _submit() {
-    setState(() => _isLoading = true);
-
-    String nama = _namaTextboxController.text;
-    String email = _emailTextboxController.text;
-    String password = _passwordTextboxController.text;
-
-    Future.delayed(const Duration(seconds: 1), () {
-      Session.registerUser(nama, email, password);
-
-      setState(() => _isLoading = false);
-
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.check_circle_outline,
-                  color: Colors.green[700],
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text('Registrasi Berhasil!'),
-            ],
-          ),
-          content: Text(
-            'Akun $nama berhasil dibuat.\nSilakan login dengan email: $email',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pop(context);
-              },
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-              child: const Text(
-                'OK',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-      );
+    _formKey.currentState!.save();
+    setState(() {
+      _isLoading = true;
     });
+
+    RegistrasiBloc.registrasi(
+      nama: _namaTextboxController.text,
+      email: _emailTextboxController.text,
+      password: _passwordTextboxController.text,
+    ).then(
+      (value) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => SuccessDialog(
+            description: "Registrasi berhasil, silahkan login",
+            okClick: () {
+              Navigator.pop(context); // tutup dialog
+              Navigator.pop(context); // kembali ke halaman login
+            },
+          ),
+        );
+      },
+      onError: (error) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => const WarningDialog(
+            description: "Registrasi gagal, silahkan coba lagi",
+          ),
+        );
+      },
+    );
   }
 }

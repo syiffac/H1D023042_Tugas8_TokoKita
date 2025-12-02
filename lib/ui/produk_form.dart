@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tokokita/bloc/produk_bloc.dart'; // tambahkan import ini
 import 'package:tokokita/model/produk.dart';
 import 'package:tokokita/ui/produk_page.dart';
+import 'package:tokokita/widget/success_dialog.dart'; // tambahkan import ini
+import 'package:tokokita/widget/warning_dialog.dart'; // tambahkan import ini
 
 // ignore: must_be_immutable
 class ProdukForm extends StatefulWidget {
@@ -444,8 +447,16 @@ class _ProdukFormState extends State<ProdukForm>
       child: ElevatedButton(
         onPressed: () {
           var validate = _formKey.currentState!.validate();
-          if (validate && !_isLoading) {
-            _submit();
+          if (validate) {
+            if (!_isLoading) {
+              if (widget.produk != null) {
+                // kondisi update produk
+                ubah();
+              } else {
+                // kondisi tambah produk
+                simpan();
+              }
+            }
           }
         },
         style: ElevatedButton.styleFrom(
@@ -490,66 +501,71 @@ class _ProdukFormState extends State<ProdukForm>
     );
   }
 
-  void _submit() {
-    _formKey.currentState!.save();
-    setState(() => _isLoading = true);
+  void simpan() {
+    setState(() {
+      _isLoading = true;
+    });
 
-    // Simulasi proses simpan
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() => _isLoading = false);
+    Produk createProduk = Produk(id: null);
+    createProduk.kodeProduk = _kodeProdukTextboxController.text;
+    createProduk.namaProduk = _namaProdukTextboxController.text;
+    createProduk.hargaProduk = int.parse(_hargaProdukTextboxController.text);
 
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+    ProdukBloc.addProduk(produk: createProduk).then(
+      (value) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => const ProdukPage(),
           ),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.check_circle_outline,
-                  color: Colors.green[700],
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text('Berhasil!'),
-            ],
+        );
+      },
+      onError: (error) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => const WarningDialog(
+            description: "Simpan gagal, silahkan coba lagi",
           ),
-          content: Text(
-            widget.produk == null
-                ? 'Produk berhasil ditambahkan'
-                : 'Produk berhasil diubah',
+        );
+      },
+    );
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void ubah() {
+    setState(() {
+      _isLoading = true;
+    });
+
+    Produk updateProduk = Produk(id: widget.produk!.id);
+    updateProduk.kodeProduk = _kodeProdukTextboxController.text;
+    updateProduk.namaProduk = _namaProdukTextboxController.text;
+    updateProduk.hargaProduk = int.parse(_hargaProdukTextboxController.text);
+
+    ProdukBloc.updateProduk(produk: updateProduk).then(
+      (value) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => const ProdukPage(),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ProdukPage()),
-                );
-              },
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-              child: const Text(
-                'OK',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-      );
+        );
+      },
+      onError: (error) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => const WarningDialog(
+            description: "Permintaan ubah data gagal, silahkan coba lagi",
+          ),
+        );
+      },
+    );
+
+    setState(() {
+      _isLoading = false;
     });
   }
 

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tokokita/bloc/produk_bloc.dart'; // tambahkan import ini
 import 'package:tokokita/model/produk.dart';
 import 'package:tokokita/ui/produk_form.dart';
 import 'package:tokokita/ui/produk_page.dart';
+import 'package:tokokita/widget/warning_dialog.dart'; // tambahkan import ini
 
 // ignore: must_be_immutable
 class ProdukDetail extends StatefulWidget {
@@ -449,94 +451,42 @@ class _ProdukDetailState extends State<ProdukDetail>
   }
 
   void _confirmDelete() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.red[50],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.warning_amber_rounded, color: Colors.red[700]),
-            ),
-            const SizedBox(width: 12),
-            const Text('Konfirmasi Hapus'),
-          ],
-        ),
-        content: Text(
-          'Apakah Anda yakin ingin menghapus produk\n"${widget.produk!.namaProduk}"?',
-        ),
-        actions: [
-          TextButton(
-            child: Text('Batal', style: TextStyle(color: Colors.grey[600])),
-            onPressed: () => Navigator.pop(context),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteProduct();
-            },
-            child: const Text(
-              'Hapus',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    AlertDialog alertDialog = AlertDialog(
+      content: const Text("Yakin ingin menghapus data ini?"),
+      actions: [
+        // tombol hapus
+        OutlinedButton(
+          child: const Text("Ya"),
+          onPressed: () {
+            Navigator.pop(context); // tutup dialog konfirmasi dulu
 
-  void _deleteProduct() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.green[50],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.check_circle_outline, color: Colors.green[700]),
-            ),
-            const SizedBox(width: 12),
-            const Text('Berhasil Dihapus!'),
-          ],
+            ProdukBloc.deleteProduk(id: int.parse(widget.produk!.id!)).then(
+              (value) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const ProdukPage()),
+                );
+              },
+              onError: (error) {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) => const WarningDialog(
+                    description: "Hapus gagal, silahkan coba lagi",
+                  ),
+                );
+              },
+            );
+          },
         ),
-        content: const Text('Produk berhasil dihapus dari daftar.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ProdukPage()),
-              );
-            },
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text(
-              'OK',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
+
+        // tombol batal
+        OutlinedButton(
+          child: const Text("Batal"),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ],
     );
+
+    showDialog(context: context, builder: (context) => alertDialog);
   }
 }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tokokita/helpers/session.dart';
+import 'package:tokokita/helpers/user_info.dart'; // tambahkan import ini
+import 'package:tokokita/bloc/login_bloc.dart'; // tambahkan import ini
+import 'package:tokokita/widget/warning_dialog.dart'; // tambahkan import ini
 import 'package:tokokita/ui/produk_page.dart';
 import 'package:tokokita/ui/registrasi_page.dart';
 
@@ -413,8 +416,8 @@ class _LoginPageState extends State<LoginPage>
       child: ElevatedButton(
         onPressed: () {
           var validate = _formKey.currentState!.validate();
-          if (validate && !_isLoading) {
-            _submit();
+          if (validate) {
+            if (!_isLoading) _submit();
           }
         },
         style: ElevatedButton.styleFrom(
@@ -454,89 +457,54 @@ class _LoginPageState extends State<LoginPage>
   }
 
   void _submit() {
-    setState(() => _isLoading = true);
+    _formKey.currentState!.save();
+    setState(() {
+      _isLoading = true;
+    });
 
-    String email = _emailTextboxController.text;
-    String password = _passwordTextboxController.text;
+    LoginBloc.login(
+      email: _emailTextboxController.text,
+      password: _passwordTextboxController.text,
+    ).then(
+      (value) async {
+        setState(() {
+          _isLoading = false;
+        });
 
-    // Simulasi loading
-    Future.delayed(const Duration(seconds: 1), () {
-      // Validasi login menggunakan Session
-      Map<String, dynamic>? user = Session.validateLogin(email, password);
+        // Jika response sukses
+        if (value.code == 200) {
+          await UserInfo().setToken(value.token.toString());
+          await UserInfo().setUserID(int.parse(value.userID.toString()));
 
-      setState(() => _isLoading = false);
-
-      if (user != null) {
-        // Login berhasil
-        Session.login(user['email'], 1, 'dummy-token');
-
-        // Tampilkan snackbar
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 12),
-                Text('Selamat datang, ${user['nama']}!'),
-              ],
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ProdukPage()),
+          );
+        } else {
+          // Login salah
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) => const WarningDialog(
+              description: "Login gagal, silahkan coba lagi",
             ),
-            backgroundColor: Colors.green[600],
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+          );
+        }
+      },
+      onError: (error) {
+        setState(() {
+          _isLoading = false;
+        });
 
-        // Redirect ke halaman produk
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const ProdukPage()),
-        );
-      } else {
-        // Login gagal
+        print(error);
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red[50],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.error_outline, color: Colors.red[700]),
-                ),
-                const SizedBox(width: 12),
-                const Text('Login Gagal'),
-              ],
-            ),
-            content: const Text(
-              'Email atau password salah!\nSilakan coba lagi.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                ),
-                child: const Text(
-                  'OK',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
+          barrierDismissible: false,
+          builder: (BuildContext context) => const WarningDialog(
+            description: "Login gagal, silahkan coba lagi",
           ),
         );
-      }
-    });
+      },
+    );
   }
 }
