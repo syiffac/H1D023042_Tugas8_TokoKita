@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tokokita/bloc/registrasi_bloc.dart';
+import 'package:tokokita/ui/login_page.dart';
 import 'package:tokokita/widget/success_dialog.dart';
 import 'package:tokokita/widget/warning_dialog.dart';
 
@@ -622,47 +623,57 @@ class _RegistrasiPageState extends State<RegistrasiPage>
     );
   }
 
-  void _submit() {
+  void _submit() async {
     _formKey.currentState!.save();
+
     setState(() {
       _isLoading = true;
     });
 
-    RegistrasiBloc.registrasi(
-      nama: _namaTextboxController.text,
-      email: _emailTextboxController.text,
-      password: _passwordTextboxController.text,
-    ).then(
-      (value) {
-        setState(() {
-          _isLoading = false;
-        });
+    try {
+      print('Start registrasi...');
+      final result = await RegistrasiBloc.registrasi(
+        nama: _namaTextboxController.text,
+        email: _emailTextboxController.text,
+        password: _passwordTextboxController.text,
+      );
 
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) => SuccessDialog(
-            description: "Registrasi berhasil, silahkan login",
-            okClick: () {
-              Navigator.pop(context); // tutup dialog
-              Navigator.pop(context); // kembali ke halaman login
-            },
-          ),
-        );
-      },
-      onError: (error) {
-        setState(() {
-          _isLoading = false;
-        });
+      // debugging: print result
+      print('Registrasi result: $result');
 
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) => const WarningDialog(
-            description: "Registrasi gagal, silahkan coba lagi",
-          ),
-        );
-      },
-    );
+      setState(() {
+        _isLoading = false;
+      });
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => SuccessDialog(
+          description: "Registrasi berhasil, silahkan login",
+          okClick: () {
+            // TUTUP dialog
+            Navigator.of(dialogContext).pop();
+
+            // lalu pindah dengan pushReplacement ke LoginPage
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const LoginPage()),
+            );
+          },
+        ),
+      );
+    } catch (e, st) {
+      print('Registrasi error: $e\n$st');
+      setState(() {
+        _isLoading = false;
+      });
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const WarningDialog(
+          description: "Registrasi gagal, silahkan coba lagi",
+        ),
+      );
+    }
   }
 }
