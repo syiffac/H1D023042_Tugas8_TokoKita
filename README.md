@@ -477,88 +477,64 @@ Aplikasi menggunakan desain modern dengan:
 ### **1. Halaman Login**
 *Halaman untuk user masuk ke aplikasi dengan email dan password*
 
-<!-- Tambahkan screenshot login di sini -->
-<img src="" width="300" />
+<img width="319" height="693" alt="image" src="https://github.com/user-attachments/assets/c7e7af66-7827-4ebc-a17f-6b1b271ad5e9" />
 
 ---
 
 ### **2. Halaman Registrasi**
 *Halaman untuk user baru mendaftar akun*
 
-<!-- Tambahkan screenshot registrasi di sini -->
-<img src="" width="300" />
+<img width="320" height="696" alt="image" src="https://github.com/user-attachments/assets/dc06cb82-c379-4a0a-b4b7-3453c0d75126" />
 
 ---
 
 ### **3. Halaman List Produk**
 *Menampilkan semua produk dalam bentuk card list*
 
-<!-- Tambahkan screenshot list produk di sini -->
-<img src="" width="300" />
+<img width="322" height="698" alt="image" src="https://github.com/user-attachments/assets/55a33420-9bb0-4149-ba84-266934e8393c" />
+
 
 ---
 
 ### **4. Sidebar / Drawer**
 *Menu navigasi dengan info user dan tombol logout*
 
-<!-- Tambahkan screenshot drawer di sini -->
-<img src="" width="300" />
+<img width="326" height="699" alt="image" src="https://github.com/user-attachments/assets/2cf9dd51-cf88-48f7-8f13-f645cad3f767" />
+
 
 ---
 
 ### **5. Halaman Tambah Produk**
 *Form untuk menambahkan produk baru*
 
-<!-- Tambahkan screenshot form tambah di sini -->
-<img src="" width="300" />
+<img width="322" height="697" alt="image" src="https://github.com/user-attachments/assets/e924b1cc-b074-4fa5-b98b-77a65a4f1a53" />
+
 
 ---
 
 ### **6. Halaman Detail Produk**
 *Menampilkan detail lengkap produk dengan opsi edit dan hapus*
 
-<!-- Tambahkan screenshot detail di sini -->
-<img src="" width="300" />
+<img width="320" height="692" alt="image" src="https://github.com/user-attachments/assets/b7899abf-5a9e-4f76-aa51-31494c1ce2e4" />
+
 
 ---
 
 ### **7. Halaman Edit Produk**
 *Form untuk mengubah data produk yang sudah ada*
 
-<!-- Tambahkan screenshot form edit di sini -->
-<img src="" width="300" />
+<img width="323" height="692" alt="image" src="https://github.com/user-attachments/assets/4993792b-5710-408f-9ecf-b98b577bc137" />
 
 ---
 
 ### **8. Dialog Konfirmasi Hapus**
 *Konfirmasi sebelum menghapus produk*
 
-<!-- Tambahkan screenshot dialog hapus di sini -->
-<img src="" width="300" />
+<img width="322" height="702" alt="image" src="https://github.com/user-attachments/assets/412d94d8-dda7-4680-8381-bd32a181cb92" />
+
 
 ---
 
-## 🚀 **Cara Menjalankan**
-
-1. Clone repository
-```bash
-git clone https://github.com/syiffac/H1D023042_Tugas8_TokoKita.git
-```
-
-2. Masuk ke folder project
-```bash
-cd H1D023042_Tugas8_TokoKita
-```
-
-3. Install dependencies
-```bash
-flutter pub get
-```
-
-4. Jalankan aplikasi
-```bash
-flutter run
-```
 
 ---
 
